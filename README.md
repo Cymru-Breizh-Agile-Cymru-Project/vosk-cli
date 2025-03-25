@@ -3,11 +3,11 @@
 A small tui program to demo live transcription using Vosk
 
 ## Prerequisites
-The microphone library uses `libportaudio2` so you need that installed to run the project. On Ubuntu this can be installed globally by running `sudo apt install libportaudio2`.
+The microphone library uses `libportaudio2`, so you need that installed to run the project. On Ubuntu this can be installed globally by running `sudo apt install libportaudio2`.
 
 ## How to run
 
-The project is setup with a pyproject.toml file, so the only thing you need to run it would be to either manually set up a virtual environment or run the following command:
+The project is set up with a pyproject.toml file, so the only thing you need to run it would be to either manually set up a virtual environment or run the following command:
 ```sh
 uv run vosk-tui
 ```
