@@ -1,5 +1,5 @@
 [project]
-name = "vosk-cli"
+name = "vosk-tui"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-vosk-cli = "vosk_cli:main"
+vosk-tui = "vosk_tui:main"
 
 [build-system]
 requires = ["hatchling"]
