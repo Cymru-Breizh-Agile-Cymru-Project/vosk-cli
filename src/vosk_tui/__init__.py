@@ -5,14 +5,16 @@
 # For more help run: `python test_microphone.py -h`
 
 import argparse
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import queue
 import sys
+import tarfile
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 import sounddevice as sd
+from huggingface_hub import HfFileSystem, hf_hub_download, repo_exists
 from rich import print
 from rich.layout import Layout
 from rich.live import Live
@@ -49,6 +51,8 @@ def main():
             model = Model(lang="en-us")
         elif Path(args.model).exists():
             model = Model(args.model)
+        elif repo_exists(args.model):
+            model = load_model_from_huggingface(args.model)
         else:
             model = Model(lang=args.model)
 
@@ -95,6 +99,39 @@ def main():
     except KeyboardInterrupt:
         print("\nDone")
         exit(0)
+
+
+def load_model_from_huggingface(model_id: str) -> Model:
+    if ":" in model_id:
+        model, file_id = model_id.split(":", maxsplit=2)
+    else:
+        model = model_id
+        fs = HfFileSystem()
+        tars = fs.glob(f"{model_id}/*.tar.gz")
+        if len(tars) == 1:
+            print(f"Resolved model tar file to be {tars[0]}")
+            file_id = tars[0].removeprefix(model_id).removeprefix("/")
+        if len(tars) == 0:
+            raise FileNotFoundError(
+                f"Could not locate a tar.gz in the repo {model_id}. Use a colon after the model id to specify one"
+            )
+        if len(tars) > 1:
+            ValueError(
+                f"Found more than one tar.gz file in the repo {model_id}. Use a colon after the model id to specify one. Found {', '.join(tars)}"
+            )
+
+    model_str_path = Path(hf_hub_download(model, file_id))
+    extracted_path = model_str_path.parent / model_str_path.stem.split(".")[0]
+    print(f"Extracting model to {extracted_path}")
+    with tarfile.open(model_str_path) as tar:
+        tar.extractall(extracted_path)
+
+    # If there is only one folder in the extracted folder, enter it
+    files = [*extracted_path.glob("*")]
+    if len(files) == 1 and files[0].is_dir():
+        extracted_path = files[0]
+
+    return Model(str(extracted_path))
 
 
 def make_layout() -> Layout:
